@@ -1,0 +1,15 @@
+{
+  "name": "ravro-kanban",
+  "version": "1.0.0",
+  "description": "Lightweight local-first desktop Kanban board — Ravro design language",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "keywords": ["electron", "kanban", "ravro", "desktop"],
+  "author": "Ravro",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^29.0.0"
+  }
+}
