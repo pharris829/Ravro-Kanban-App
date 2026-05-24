@@ -19,7 +19,7 @@ function createWindow() {
     },
   });
 
-  win.loadFile('index.html');
+  win.loadFile(path.join(__dirname, '..', 'index.html'));
 }
 
 ipcMain.handle('save-board', (_event, data) => {
