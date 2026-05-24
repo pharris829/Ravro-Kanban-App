@@ -4,8 +4,8 @@ const fs = require('fs');
 const { callAI } = require('./ai');
 
 const isDev = process.env.NODE_ENV === 'development';
-const BOARD_PATH = path.join(app.getPath('userData'), 'board.json');
-const SETTINGS_PATH = path.join(app.getPath('userData'), 'settings.json');
+const getBoardPath    = () => path.join(app.getPath('userData'), 'board.json');
+const getSettingsPath = () => path.join(app.getPath('userData'), 'settings.json');
 
 // ── Persistence helpers ──────────────────────────────────────────
 function readJSON(filePath) {
@@ -47,16 +47,16 @@ app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(
 app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
 
 // ── Board IPC ────────────────────────────────────────────────────
-ipcMain.handle('board:load', () => readJSON(BOARD_PATH));
-ipcMain.handle('board:save', (_e, data) => { writeJSON(BOARD_PATH, data); return { ok: true }; });
+ipcMain.handle('board:load', () => readJSON(getBoardPath()));
+ipcMain.handle('board:save', (_e, data) => { writeJSON(getBoardPath(), data); return { ok: true }; });
 
 // ── Settings IPC ─────────────────────────────────────────────────
-ipcMain.handle('settings:get', () => readJSON(SETTINGS_PATH) || {});
-ipcMain.handle('settings:set', (_e, data) => { writeJSON(SETTINGS_PATH, data); return { ok: true }; });
+ipcMain.handle('settings:get', () => readJSON(getSettingsPath()) || {});
+ipcMain.handle('settings:set', (_e, data) => { writeJSON(getSettingsPath(), data); return { ok: true }; });
 
 // ── AI IPC ───────────────────────────────────────────────────────
 ipcMain.handle('ai:complete', async (_e, { messages, systemPrompt }) => {
-  const settings = readJSON(SETTINGS_PATH) || {};
+  const settings = readJSON(getSettingsPath()) || {};
   try {
     const text = await callAI(settings, messages, systemPrompt);
     return { ok: true, text };

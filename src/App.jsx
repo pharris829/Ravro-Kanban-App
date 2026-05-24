@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Board from './components/Board';
 import ChatSidebar from './components/ChatSidebar';
 import SettingsModal from './components/SettingsModal';
+import SplashScreen from './components/SplashScreen';
 
 const DEFAULT_COLUMNS = [
   { id: 'backlog',      title: 'Backlog',      cards: [] },
@@ -18,6 +19,14 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [suggestingMoves, setSuggestingMoves] = useState(false);
+  const [splash, setSplash] = useState(true);
+  const [splashFade, setSplashFade] = useState(false);
+
+  useEffect(() => {
+    const fadeTimer  = setTimeout(() => setSplashFade(true),  1800);
+    const hideTimer  = setTimeout(() => setSplash(false),     2400);
+    return () => { clearTimeout(fadeTimer); clearTimeout(hideTimer); };
+  }, []);
 
   useEffect(() => {
     window.electronAPI?.board.load().then(data => {
@@ -149,6 +158,8 @@ Only suggest moves that clearly make sense. If no moves are needed, return [].`,
   const totalCards = columns.reduce((s, c) => s + c.cards.length, 0);
 
   return (
+    <>
+      {splash && <SplashScreen fadeOut={splashFade} />}
     <div className="app">
       <header className="header">
         <div className="header-logo">RK</div>
@@ -192,5 +203,6 @@ Only suggest moves that clearly make sense. If no moves are needed, return [].`,
 
       {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} />}
     </div>
+    </>
   );
 }
