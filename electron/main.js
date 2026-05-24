@@ -1,14 +1,29 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const { callAI } = require('./ai');
 
-const DATA_PATH = path.join(app.getPath('userData'), 'board.json');
+const isDev = process.env.NODE_ENV === 'development';
+const BOARD_PATH = path.join(app.getPath('userData'), 'board.json');
+const SETTINGS_PATH = path.join(app.getPath('userData'), 'settings.json');
 
+// ── Persistence helpers ──────────────────────────────────────────
+function readJSON(filePath) {
+  try {
+    return fs.existsSync(filePath) ? JSON.parse(fs.readFileSync(filePath, 'utf-8')) : null;
+  } catch { return null; }
+}
+
+function writeJSON(filePath, data) {
+  fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
+}
+
+// ── Window ───────────────────────────────────────────────────────
 function createWindow() {
   const win = new BrowserWindow({
-    width: 1400,
+    width: 1440,
     height: 860,
-    minWidth: 900,
+    minWidth: 960,
     minHeight: 600,
     backgroundColor: '#0f0f0f',
     titleBarStyle: 'hiddenInset',
@@ -19,29 +34,33 @@ function createWindow() {
     },
   });
 
-  win.loadFile(path.join(__dirname, '..', 'index.html'));
+  if (isDev) {
+    win.loadURL('http://localhost:5173');
+    win.webContents.openDevTools();
+  } else {
+    win.loadFile(path.join(__dirname, '..', 'dist', 'index.html'));
+  }
 }
 
-ipcMain.handle('save-board', (_event, data) => {
-  fs.writeFileSync(DATA_PATH, JSON.stringify(data, null, 2), 'utf-8');
-  return { ok: true };
-});
-
-ipcMain.handle('load-board', () => {
-  if (!fs.existsSync(DATA_PATH)) return null;
-  try {
-    return JSON.parse(fs.readFileSync(DATA_PATH, 'utf-8'));
-  } catch {
-    return null;
-  }
-});
-
 app.whenReady().then(createWindow);
+app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
+app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
-});
+// ── Board IPC ────────────────────────────────────────────────────
+ipcMain.handle('board:load', () => readJSON(BOARD_PATH));
+ipcMain.handle('board:save', (_e, data) => { writeJSON(BOARD_PATH, data); return { ok: true }; });
 
-app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) createWindow();
+// ── Settings IPC ─────────────────────────────────────────────────
+ipcMain.handle('settings:get', () => readJSON(SETTINGS_PATH) || {});
+ipcMain.handle('settings:set', (_e, data) => { writeJSON(SETTINGS_PATH, data); return { ok: true }; });
+
+// ── AI IPC ───────────────────────────────────────────────────────
+ipcMain.handle('ai:complete', async (_e, { messages, systemPrompt }) => {
+  const settings = readJSON(SETTINGS_PATH) || {};
+  try {
+    const text = await callAI(settings, messages, systemPrompt);
+    return { ok: true, text };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
 });
