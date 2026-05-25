@@ -7,6 +7,13 @@ const isDev = process.env.NODE_ENV === 'development';
 const getBoardPath    = () => path.join(app.getPath('userData'), 'board.json');
 const getSettingsPath = () => path.join(app.getPath('userData'), 'settings.json');
 
+// Resolves the icon path for both dev and packaged builds
+function iconPath() {
+  return app.isPackaged
+    ? path.join(process.resourcesPath, 'icon.ico')
+    : path.join(__dirname, '..', 'build', 'icon.ico');
+}
+
 // ── Persistence helpers ──────────────────────────────────────────
 function readJSON(filePath) {
   try {
@@ -26,6 +33,7 @@ function createWindow() {
     minWidth: 960,
     minHeight: 600,
     backgroundColor: '#0f0f0f',
+    icon: iconPath(),
     titleBarStyle: 'hiddenInset',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -42,7 +50,13 @@ function createWindow() {
   }
 }
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  // Required for Windows taskbar pinning and jump lists
+  if (process.platform === 'win32') {
+    app.setAppUserModelId('com.ravro.kanban');
+  }
+  createWindow();
+});
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
 
