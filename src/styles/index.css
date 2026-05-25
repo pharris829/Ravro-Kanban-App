@@ -628,27 +628,57 @@ html, body, #root {
   flex: 1;
   overflow: hidden;
 }
-.flow-card-node {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-left: 3px solid;
-  border-radius: var(--radius);
-  padding: 8px 12px;
-  width: 210px;
-  min-height: 44px;
+
+/* ── Flow card node ──────────────────────────── */
+.flow-card {
+  width: 260px;
+  padding: 20px 22px 16px;
+  border-radius: 18px;
+  background: linear-gradient(145deg, #ffffff, #f3f3f3);
+  box-shadow:
+    0 8px 18px rgba(0,0,0,0.08),
+    0 3px 6px rgba(0,0,0,0.05),
+    inset 0 1px 0 rgba(255,255,255,0.6);
+  border: 1px solid rgba(0,0,0,0.06);
+  transition: transform .25s ease, box-shadow .25s ease;
+  position: relative;
+  overflow: hidden;
 }
-.flow-node-col {
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  margin-bottom: 4px;
+.flow-card:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 14px 28px rgba(0,0,0,0.12),
+    0 6px 12px rgba(0,0,0,0.08);
 }
-.flow-node-text {
-  font-size: 12px;
-  color: var(--text);
+.flow-card-stripe {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  border-radius: 18px 18px 0 0;
+}
+.flow-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #222;
   line-height: 1.45;
   word-break: break-word;
+  margin-bottom: 8px;
+  margin-top: 6px;
+}
+.flow-card-sub {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ── Gradient edge animation ─────────────────── */
+.flow-edge-path {
+  animation: flowPulse 2.5s infinite ease-in-out;
+}
+@keyframes flowPulse {
+  0%, 100% { stroke-opacity: 0.65; }
+  50%       { stroke-opacity: 1; }
 }
 
 /* ── Card attachments ────────────────────────────── */
