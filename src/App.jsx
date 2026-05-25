@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Board from './components/Board';
 import ChatSidebar from './components/ChatSidebar';
 import SettingsModal from './components/SettingsModal';
@@ -22,26 +22,43 @@ export default function App() {
   const [suggestingMoves, setSuggestingMoves] = useState(false);
   const [splash, setSplash] = useState(true);
   const [splashFade, setSplashFade] = useState(false);
-  const [titleCard, setTitleCard] = useState(false);
-  const [titleFade, setTitleFade] = useState(false);
+  const [view, setView] = useState('dashboard');
+  const [projectData, setProjectData] = useState({ title: '', toc: '' });
   const [saved, setSaved] = useState(false);
 
+  // Refs to avoid stale closures in persist/updateProject callbacks
+  const columnsRef = useRef(columns);
+  const projectRef = useRef({ title: '', toc: '' });
+  useEffect(() => { columnsRef.current = columns; }, [columns]);
+  useEffect(() => { projectRef.current = projectData; }, [projectData]);
+
   useEffect(() => {
-    const t1 = setTimeout(() => setSplashFade(true),                    1800);
-    const t2 = setTimeout(() => { setSplash(false); setTitleCard(true); }, 2400);
-    const t3 = setTimeout(() => setTitleFade(true),                     3800);
-    const t4 = setTimeout(() => setTitleCard(false),                    4400);
-    return () => [t1, t2, t3, t4].forEach(clearTimeout);
+    const t1 = setTimeout(() => setSplashFade(true), 1800);
+    const t2 = setTimeout(() => setSplash(false),    2400);
+    return () => [t1, t2].forEach(clearTimeout);
   }, []);
 
   useEffect(() => {
     window.electronAPI?.board.load().then(data => {
       if (data?.columns) setColumns(data.columns);
+      if (data?.project) {
+        setProjectData(data.project);
+        projectRef.current = data.project;
+      }
     });
   }, []);
 
   const persist = useCallback((cols) => {
-    window.electronAPI?.board.save({ columns: cols });
+    window.electronAPI?.board.save({ columns: cols, project: projectRef.current });
+  }, []);
+
+  const updateProject = useCallback((updates) => {
+    setProjectData(prev => {
+      const next = { ...prev, ...updates };
+      projectRef.current = next;
+      window.electronAPI?.board.save({ columns: columnsRef.current, project: next });
+      return next;
+    });
   }, []);
 
   const addCard = useCallback((colId, text) => {
@@ -94,10 +111,10 @@ export default function App() {
   }, [persist]);
 
   const manualSave = useCallback(() => {
-    window.electronAPI?.board.save({ columns });
+    window.electronAPI?.board.save({ columns: columnsRef.current, project: projectRef.current });
     setSaved(true);
     setTimeout(() => setSaved(false), 1500);
-  }, [columns]);
+  }, []);
 
   const addCards = useCallback((colId, texts) => {
     setColumns(prev => {
@@ -172,55 +189,64 @@ Only suggest moves that clearly make sense. If no moves are needed, return [].`,
   return (
     <>
       {splash && <SplashScreen fadeOut={splashFade} />}
-      <TitleCard visible={titleCard} fadeOut={titleFade} />
-    <div className="app">
-      <header className="header">
-        <div className="header-logo">RK</div>
-        <span className="header-title">Ravro Kanban</span>
-        <div className="header-actions">
-          <span className="header-count">{totalCards} card{totalCards !== 1 ? 's' : ''}</span>
-          <button
-            className={`btn-header${saved ? ' btn-saved-flash' : ''}`}
-            onClick={manualSave}
-            title="Save board"
-          >{saved ? '✓ Saved' : '↓ Save'}</button>
-          <button
-            className="btn-header"
-            onClick={suggestMoves}
-            disabled={suggestingMoves}
-            title="AI: Suggest card moves across columns"
-          >
-            {suggestingMoves ? '✦ Thinking…' : '✦ Suggest Moves'}
-          </button>
-          <button
-            className="btn-header btn-icon"
-            onClick={() => setSettingsOpen(true)}
-            title="AI Settings"
-          >⚙</button>
-          <button
-            className={`btn-header btn-icon${sidebarOpen ? ' active' : ''}`}
-            onClick={() => setSidebarOpen(v => !v)}
-            title="Toggle AI chat"
-          >◧</button>
-        </div>
-      </header>
-
-      <div className="workspace">
-        <Board
+      {!splash && view === 'dashboard' && (
+        <TitleCard
           columns={columns}
-          onAddCard={addCard}
-          onMoveCard={moveCard}
-          onDeleteCard={deleteCard}
-          onUpdateCard={updateCard}
-          onAddCards={addCards}
+          projectData={projectData}
+          onUpdateProject={updateProject}
+          onOpenProject={() => setView('board')}
         />
-        {sidebarOpen && (
-          <ChatSidebar columns={columns} onClose={() => setSidebarOpen(false)} />
-        )}
-      </div>
+      )}
+      {view === 'board' && (
+        <div className="app">
+          <header className="header">
+            <div className="header-logo" onClick={() => setView('dashboard')} title="Back to dashboard">RK</div>
+            <span className="header-title">Ravro Kanban</span>
+            <div className="header-actions">
+              <span className="header-count">{totalCards} card{totalCards !== 1 ? 's' : ''}</span>
+              <button
+                className={`btn-header${saved ? ' btn-saved-flash' : ''}`}
+                onClick={manualSave}
+                title="Save board"
+              >{saved ? '✓ Saved' : '↓ Save'}</button>
+              <button
+                className="btn-header"
+                onClick={suggestMoves}
+                disabled={suggestingMoves}
+                title="AI: Suggest card moves across columns"
+              >
+                {suggestingMoves ? '✦ Thinking…' : '✦ Suggest Moves'}
+              </button>
+              <button
+                className="btn-header btn-icon"
+                onClick={() => setSettingsOpen(true)}
+                title="AI Settings"
+              >⚙</button>
+              <button
+                className={`btn-header btn-icon${sidebarOpen ? ' active' : ''}`}
+                onClick={() => setSidebarOpen(v => !v)}
+                title="Toggle AI chat"
+              >◧</button>
+            </div>
+          </header>
 
-      {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} />}
-    </div>
+          <div className="workspace">
+            <Board
+              columns={columns}
+              onAddCard={addCard}
+              onMoveCard={moveCard}
+              onDeleteCard={deleteCard}
+              onUpdateCard={updateCard}
+              onAddCards={addCards}
+            />
+            {sidebarOpen && (
+              <ChatSidebar columns={columns} onClose={() => setSidebarOpen(false)} />
+            )}
+          </div>
+
+          {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} />}
+        </div>
+      )}
     </>
   );
 }
