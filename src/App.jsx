@@ -212,6 +212,7 @@ Only suggest moves that clearly make sense. If no moves are needed, return [].`,
           flowData={flowData}
           onSaveFlow={saveFlow}
           onBack={() => setView('board')}
+          onUpdateCard={updateCard}
         />
       )}
 

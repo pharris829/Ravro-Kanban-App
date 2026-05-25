@@ -672,6 +672,57 @@ html, body, #root {
   text-transform: uppercase;
 }
 
+/* ── Flow card sub-cards ─────────────────────── */
+.flow-subcard-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 6px 0 4px;
+}
+.flow-subcard-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  background: #ebebeb;
+  border: 1px solid #d8d8d8;
+  border-radius: 10px;
+  color: #555;
+  font-size: 10px;
+  font-family: inherit;
+  cursor: pointer;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: background 0.1s, border-color 0.1s, color 0.1s;
+}
+.flow-subcard-chip:hover {
+  background: #ece9ff;
+  border-color: #6a5af9;
+  color: #6a5af9;
+}
+.btn-flow-add-note {
+  display: block;
+  width: 100%;
+  margin: 6px 0 4px;
+  padding: 4px 0;
+  background: transparent;
+  border: 1px dashed #ccc;
+  border-radius: 8px;
+  color: #aaa;
+  font-size: 10px;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.1s, border-color 0.1s, color 0.1s;
+}
+.btn-flow-add-note:hover {
+  background: #ece9ff;
+  border-color: #6a5af9;
+  color: #6a5af9;
+}
+
 /* ── Gradient edge animation ─────────────────── */
 .flow-edge-path {
   animation: flowPulse 2.5s infinite ease-in-out;
