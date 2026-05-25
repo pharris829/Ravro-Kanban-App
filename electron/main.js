@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell, Menu } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { callAI } = require('./ai');
@@ -40,6 +40,16 @@ function createWindow() {
       contextIsolation: true,
       nodeIntegration: false,
     },
+  });
+
+  win.webContents.on('context-menu', (_e, params) => {
+    Menu.buildFromTemplate([
+      { role: 'cut',       enabled: params.isEditable },
+      { role: 'copy',      enabled: params.editFlags.canCopy },
+      { role: 'paste',     enabled: params.isEditable },
+      { type: 'separator' },
+      { role: 'selectAll' },
+    ]).popup({ window: win });
   });
 
   if (isDev) {
