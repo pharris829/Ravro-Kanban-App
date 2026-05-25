@@ -681,63 +681,99 @@ html, body, #root {
   50%       { stroke-opacity: 1; }
 }
 
-/* ── Card attachments ────────────────────────────── */
-.attach-badge {
-  position: relative;
+/* ── Sub-card chips ──────────────────────────────── */
+.subcard-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 7px;
+}
+.subcard-chip {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
-  margin-top: 6px;
-  font-size: 11px;
-  color: var(--text-muted);
-  cursor: default;
-  -webkit-user-select: none;
-  user-select: none;
-}
-.attach-popup {
-  position: absolute;
-  bottom: calc(100% + 6px);
-  left: 0;
-  z-index: 50;
-  min-width: 180px;
-  max-width: 280px;
+  gap: 4px;
+  padding: 3px 9px;
   background: var(--surface2);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.6);
-  padding: 4px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.attach-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 7px;
-  border-radius: 4px;
-  transition: background 0.1s;
-}
-.attach-item:hover { background: var(--card-hover); }
-.attach-name {
-  flex: 1;
-  font-size: 12px;
-  color: var(--mint);
+  border-radius: 12px;
+  color: var(--text-dim);
+  font-size: 11px;
+  font-family: inherit;
   cursor: pointer;
-  white-space: nowrap;
+  max-width: 150px;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: background 0.1s, border-color 0.1s, color 0.1s;
 }
-.attach-name:hover { text-decoration: underline; }
-.attach-remove {
+.subcard-chip:hover {
+  background: var(--mint-glow);
+  border-color: var(--mint-dim);
+  color: var(--mint);
+}
+
+/* ── Sub-card modal ──────────────────────────────── */
+.subcard-modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  width: 520px;
+  max-width: 92vw;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.55);
+  overflow: hidden;
+}
+.subcard-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.subcard-title-input {
+  flex: 1;
   background: transparent;
   border: none;
-  color: var(--text-muted);
-  font-size: 10px;
-  cursor: pointer;
-  padding: 1px 3px;
-  border-radius: 3px;
-  flex-shrink: 0;
-  line-height: 1;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  outline: none;
 }
-.attach-remove:hover { color: var(--danger); }
+.subcard-title-input::placeholder { color: var(--text-muted); font-weight: 400; }
+.subcard-content-area {
+  flex: 1;
+  min-height: 260px;
+  padding: 14px 16px;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-size: 13px;
+  font-family: inherit;
+  line-height: 1.75;
+  resize: none;
+  outline: none;
+}
+.subcard-content-area::placeholder { color: var(--text-muted); }
+.subcard-footer {
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+.btn-delete-subcard {
+  padding: 5px 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+}
+.btn-delete-subcard:hover { background: rgba(192,57,43,0.15); color: var(--danger); }

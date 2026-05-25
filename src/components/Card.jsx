@@ -1,9 +1,10 @@
 import { useState } from 'react';
+import SubCardModal from './SubCardModal';
 
 export default function Card({ card, isFirst, isLast, onMoveLeft, onMoveRight, onDelete, onUpdate }) {
   const [working, setWorking] = useState(null);
-  const [attachHover, setAttachHover] = useState(false);
-  const attachments = card.attachments || [];
+  const [openSubcard, setOpenSubcard] = useState(null);
+  const subcards = card.subcards || [];
 
   const aiAction = async (action) => {
     setWorking(action);
@@ -27,65 +28,60 @@ export default function Card({ card, isFirst, isLast, onMoveLeft, onMoveRight, o
     onUpdate({ text: result.text.trim() });
   };
 
-  const attachFiles = async () => {
-    const paths = await window.electronAPI?.files.openDialog();
-    if (!paths?.length) return;
-    const newAttachments = [
-      ...attachments,
-      ...paths.map(p => ({
-        id: `a-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-        name: p.split(/[\\/]/).pop(),
-        path: p,
-      })),
-    ];
-    onUpdate({ attachments: newAttachments });
+  const addSubcard = () => {
+    const sub = { id: `sc-${Date.now()}`, title: 'New note', content: '' };
+    onUpdate({ subcards: [...subcards, sub] });
+    setOpenSubcard(sub);
   };
 
-  const removeAttachment = (id) => {
-    onUpdate({ attachments: attachments.filter(a => a.id !== id) });
+  const saveSubcard = (updated) => {
+    onUpdate({ subcards: subcards.map(s => s.id === updated.id ? updated : s) });
+    setOpenSubcard(updated);
+  };
+
+  const deleteSubcard = (id) => {
+    onUpdate({ subcards: subcards.filter(s => s.id !== id) });
   };
 
   return (
-    <div className="card">
-      {working && <div className="card-loading">✦ {working}ing…</div>}
-      <div className="card-text">{card.text}</div>
+    <>
+      <div className="card">
+        {working && <div className="card-loading">✦ {working}ing…</div>}
+        <div className="card-text">{card.text}</div>
 
-      {attachments.length > 0 && (
-        <div
-          className="attach-badge"
-          onMouseEnter={() => setAttachHover(true)}
-          onMouseLeave={() => setAttachHover(false)}
-        >
-          📎 {attachments.length}
-          {attachHover && (
-            <div className="attach-popup">
-              {attachments.map(a => (
-                <div key={a.id} className="attach-item">
-                  <span
-                    className="attach-name"
-                    onClick={() => window.electronAPI?.files.open(a.path)}
-                    title={a.path}
-                  >{a.name}</span>
-                  <button
-                    className="attach-remove"
-                    onClick={(e) => { e.stopPropagation(); removeAttachment(a.id); }}
-                    title="Remove attachment"
-                  >✕</button>
-                </div>
-              ))}
-            </div>
-          )}
+        {subcards.length > 0 && (
+          <div className="subcard-chips">
+            {subcards.map(s => (
+              <button
+                key={s.id}
+                className="subcard-chip"
+                onClick={() => setOpenSubcard(s)}
+                title={s.content || 'Empty note'}
+              >
+                ◉ {s.title}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div className="card-actions">
+          {!isFirst && <button className="btn-move" onClick={onMoveLeft}>← Left</button>}
+          {!isLast  && <button className="btn-move" onClick={onMoveRight}>Right →</button>}
+          <button className="btn-ai-action" onClick={() => aiAction('expand')}    disabled={!!working} title="AI: Expand card">✦+</button>
+          <button className="btn-ai-action" onClick={() => aiAction('summarize')} disabled={!!working} title="AI: Summarize card">✦−</button>
+          <button className="btn-ai-action" onClick={addSubcard} title="Add note">+ Note</button>
+          <button className="btn-delete" onClick={onDelete} title="Delete card">✕</button>
         </div>
-      )}
-
-      <div className="card-actions">
-        {!isFirst && <button className="btn-move" onClick={onMoveLeft}>← Left</button>}
-        {!isLast  && <button className="btn-move" onClick={onMoveRight}>Right →</button>}
-        <button className="btn-ai-action" onClick={() => aiAction('expand')}    disabled={!!working} title="AI: Expand card">✦+</button>
-        <button className="btn-ai-action" onClick={() => aiAction('summarize')} disabled={!!working} title="AI: Summarize card">✦−</button>
-        <button className="btn-ai-action" onClick={attachFiles} title="Attach file">📎</button>
-        <button className="btn-delete" onClick={onDelete} title="Delete card">✕</button>
       </div>
-    </div>
+
+      {openSubcard && (
+        <SubCardModal
+          subcard={openSubcard}
+          onSave={saveSubcard}
+          onDelete={deleteSubcard}
+          onClose={() => setOpenSubcard(null)}
+        />
+      )}
+    </>
   );
 }
