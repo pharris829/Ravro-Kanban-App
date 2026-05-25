@@ -222,6 +222,11 @@ Only suggest moves that clearly make sense. If no moves are needed, return [].`,
             <div className="header-logo" onClick={() => setView('dashboard')} title="Back to dashboard">RK</div>
             <span className="header-title">Ravro Kanban</span>
             <div className="header-actions">
+              <button
+                className="btn-header btn-icon"
+                onClick={() => window.location.reload()}
+                title="Reload"
+              >↻</button>
               <span className="header-count">{totalCards} card{totalCards !== 1 ? 's' : ''}</span>
               <button
                 className={`btn-header${saved ? ' btn-saved-flash' : ''}`}

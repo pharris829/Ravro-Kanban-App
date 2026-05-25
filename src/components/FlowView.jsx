@@ -199,6 +199,7 @@ export default function FlowView({ columns, flowData, onSaveFlow, onBack, onUpda
       <div className="flow-view">
         <div className="flow-topbar">
           <button className="btn-flow-back" onClick={onBack}>← Board</button>
+          <button className="btn-flow-back" onClick={() => window.location.reload()} title="Reload">↻</button>
           <span className="flow-title">Flow View</span>
           <span className="flow-hint">Drag handles to connect · Select + Delete removes edges</span>
         </div>
