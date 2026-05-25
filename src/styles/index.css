@@ -580,6 +580,77 @@ html, body, #root {
   color: var(--mint);
 }
 
+/* ── Flow view ───────────────────────────────────── */
+.flow-view {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+  background: var(--bg);
+}
+.flow-topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 18px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  -webkit-app-region: drag;
+  flex-shrink: 0;
+}
+.btn-flow-back {
+  -webkit-app-region: no-drag;
+  padding: 5px 12px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-dim);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+.btn-flow-back:hover { background: var(--card); color: var(--text); }
+.flow-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+.flow-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-left: auto;
+  -webkit-app-region: no-drag;
+}
+.flow-canvas {
+  flex: 1;
+  overflow: hidden;
+}
+.flow-card-node {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-left: 3px solid;
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  width: 210px;
+  min-height: 44px;
+}
+.flow-node-col {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.flow-node-text {
+  font-size: 12px;
+  color: var(--text);
+  line-height: 1.45;
+  word-break: break-word;
+}
+
 /* ── Card attachments ────────────────────────────── */
 .attach-badge {
   position: relative;

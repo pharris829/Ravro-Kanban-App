@@ -4,6 +4,7 @@ import ChatSidebar from './components/ChatSidebar';
 import SettingsModal from './components/SettingsModal';
 import SplashScreen from './components/SplashScreen';
 import TitleCard from './components/TitleCard';
+import FlowView from './components/FlowView';
 
 const DEFAULT_COLUMNS = [
   { id: 'backlog',      title: 'Backlog',      cards: [] },
@@ -22,15 +23,18 @@ export default function App() {
   const [suggestingMoves, setSuggestingMoves] = useState(false);
   const [splash, setSplash] = useState(true);
   const [splashFade, setSplashFade] = useState(false);
-  const [view, setView] = useState('dashboard');
+  const [view, setView] = useState('dashboard'); // 'dashboard' | 'board' | 'flow'
   const [projectData, setProjectData] = useState({ title: '', toc: '' });
+  const [flowData, setFlowData] = useState({ positions: {}, edges: [] });
   const [saved, setSaved] = useState(false);
 
-  // Refs to avoid stale closures in persist/updateProject callbacks
-  const columnsRef = useRef(columns);
+  // Refs to avoid stale closures in persist callbacks
+  const columnsRef = useRef(DEFAULT_COLUMNS);
   const projectRef = useRef({ title: '', toc: '' });
+  const flowRef    = useRef({ positions: {}, edges: [] });
   useEffect(() => { columnsRef.current = columns; }, [columns]);
   useEffect(() => { projectRef.current = projectData; }, [projectData]);
+  useEffect(() => { flowRef.current = flowData; }, [flowData]);
 
   useEffect(() => {
     const t1 = setTimeout(() => setSplashFade(true), 1800);
@@ -40,26 +44,40 @@ export default function App() {
 
   useEffect(() => {
     window.electronAPI?.board.load().then(data => {
-      if (data?.columns) setColumns(data.columns);
-      if (data?.project) {
-        setProjectData(data.project);
-        projectRef.current = data.project;
-      }
+      if (data?.columns) { setColumns(data.columns); columnsRef.current = data.columns; }
+      if (data?.project) { setProjectData(data.project); projectRef.current = data.project; }
+      if (data?.flow)    { setFlowData(data.flow);    flowRef.current = data.flow; }
     });
   }, []);
 
-  const persist = useCallback((cols) => {
-    window.electronAPI?.board.save({ columns: cols, project: projectRef.current });
+  const saveAll = useCallback((cols, proj, flow) => {
+    window.electronAPI?.board.save({ columns: cols, project: proj, flow });
   }, []);
+
+  const persist = useCallback((cols) => {
+    saveAll(cols, projectRef.current, flowRef.current);
+  }, [saveAll]);
 
   const updateProject = useCallback((updates) => {
     setProjectData(prev => {
       const next = { ...prev, ...updates };
       projectRef.current = next;
-      window.electronAPI?.board.save({ columns: columnsRef.current, project: next });
+      saveAll(columnsRef.current, next, flowRef.current);
       return next;
     });
-  }, []);
+  }, [saveAll]);
+
+  const saveFlow = useCallback((flow) => {
+    setFlowData(flow);
+    flowRef.current = flow;
+    saveAll(columnsRef.current, projectRef.current, flow);
+  }, [saveAll]);
+
+  const manualSave = useCallback(() => {
+    saveAll(columnsRef.current, projectRef.current, flowRef.current);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 1500);
+  }, [saveAll]);
 
   const addCard = useCallback((colId, text) => {
     setColumns(prev => {
@@ -110,12 +128,6 @@ export default function App() {
     });
   }, [persist]);
 
-  const manualSave = useCallback(() => {
-    window.electronAPI?.board.save({ columns: columnsRef.current, project: projectRef.current });
-    setSaved(true);
-    setTimeout(() => setSaved(false), 1500);
-  }, []);
-
   const addCards = useCallback((colId, texts) => {
     setColumns(prev => {
       const next = prev.map(c =>
@@ -147,22 +159,17 @@ Only suggest moves that clearly make sense. If no moves are needed, return [].`,
     });
 
     setSuggestingMoves(false);
-
     if (!result?.ok) { alert(`AI error: ${result?.error}`); return; }
 
     let suggestions;
-    try {
-      suggestions = JSON.parse(result.text);
-    } catch {
-      alert('Could not parse AI response. Try again.'); return;
-    }
+    try { suggestions = JSON.parse(result.text); }
+    catch { alert('Could not parse AI response. Try again.'); return; }
 
     if (!suggestions.length) { alert('No moves suggested — board looks great!'); return; }
 
     const msg = suggestions
       .map(s => `• "${s.cardText}"\n  ${s.fromColumn} → ${s.toColumn}: ${s.reason}`)
       .join('\n\n');
-
     if (!confirm(`AI suggested moves:\n\n${msg}\n\nApply all?`)) return;
 
     setColumns(prev => {
@@ -189,6 +196,7 @@ Only suggest moves that clearly make sense. If no moves are needed, return [].`,
   return (
     <>
       {splash && <SplashScreen fadeOut={splashFade} />}
+
       {!splash && view === 'dashboard' && (
         <TitleCard
           columns={columns}
@@ -197,6 +205,16 @@ Only suggest moves that clearly make sense. If no moves are needed, return [].`,
           onOpenProject={() => setView('board')}
         />
       )}
+
+      {view === 'flow' && (
+        <FlowView
+          columns={columns}
+          flowData={flowData}
+          onSaveFlow={saveFlow}
+          onBack={() => setView('board')}
+        />
+      )}
+
       {view === 'board' && (
         <div className="app">
           <header className="header">
@@ -209,6 +227,11 @@ Only suggest moves that clearly make sense. If no moves are needed, return [].`,
                 onClick={manualSave}
                 title="Save board"
               >{saved ? '✓ Saved' : '↓ Save'}</button>
+              <button
+                className="btn-header"
+                onClick={() => setView('flow')}
+                title="Switch to flow view"
+              >Flow ↗</button>
               <button
                 className="btn-header"
                 onClick={suggestMoves}

@@ -11,7 +11,8 @@
     "dist": "npm run build && electron-builder --win"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.39.0"
+    "@anthropic-ai/sdk": "^0.39.0",
+    "reactflow": "^11.11.4"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.0",
@@ -41,10 +42,20 @@
       "package.json"
     ],
     "extraResources": [
-      { "from": "build/icon.ico", "to": "icon.ico" }
+      {
+        "from": "build/icon.ico",
+        "to": "icon.ico"
+      }
     ],
     "win": {
-      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
       "icon": "build/icon.ico",
       "artifactName": "Ravro-Kanban-Setup-${version}.${ext}"
     },
