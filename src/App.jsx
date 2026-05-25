@@ -3,6 +3,7 @@ import Board from './components/Board';
 import ChatSidebar from './components/ChatSidebar';
 import SettingsModal from './components/SettingsModal';
 import SplashScreen from './components/SplashScreen';
+import TitleCard from './components/TitleCard';
 
 const DEFAULT_COLUMNS = [
   { id: 'backlog',      title: 'Backlog',      cards: [] },
@@ -21,11 +22,16 @@ export default function App() {
   const [suggestingMoves, setSuggestingMoves] = useState(false);
   const [splash, setSplash] = useState(true);
   const [splashFade, setSplashFade] = useState(false);
+  const [titleCard, setTitleCard] = useState(false);
+  const [titleFade, setTitleFade] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    const fadeTimer  = setTimeout(() => setSplashFade(true),  1800);
-    const hideTimer  = setTimeout(() => setSplash(false),     2400);
-    return () => { clearTimeout(fadeTimer); clearTimeout(hideTimer); };
+    const t1 = setTimeout(() => setSplashFade(true),                    1800);
+    const t2 = setTimeout(() => { setSplash(false); setTitleCard(true); }, 2400);
+    const t3 = setTimeout(() => setTitleFade(true),                     3800);
+    const t4 = setTimeout(() => setTitleCard(false),                    4400);
+    return () => [t1, t2, t3, t4].forEach(clearTimeout);
   }, []);
 
   useEffect(() => {
@@ -75,17 +81,23 @@ export default function App() {
     });
   }, [persist]);
 
-  const updateCard = useCallback((colId, cardId, text) => {
+  const updateCard = useCallback((colId, cardId, updates) => {
     setColumns(prev => {
       const next = prev.map(c =>
         c.id === colId
-          ? { ...c, cards: c.cards.map(card => card.id === cardId ? { ...card, text } : card) }
+          ? { ...c, cards: c.cards.map(card => card.id === cardId ? { ...card, ...updates } : card) }
           : c
       );
       persist(next);
       return next;
     });
   }, [persist]);
+
+  const manualSave = useCallback(() => {
+    window.electronAPI?.board.save({ columns });
+    setSaved(true);
+    setTimeout(() => setSaved(false), 1500);
+  }, [columns]);
 
   const addCards = useCallback((colId, texts) => {
     setColumns(prev => {
@@ -160,12 +172,18 @@ Only suggest moves that clearly make sense. If no moves are needed, return [].`,
   return (
     <>
       {splash && <SplashScreen fadeOut={splashFade} />}
+      <TitleCard visible={titleCard} fadeOut={titleFade} />
     <div className="app">
       <header className="header">
         <div className="header-logo">RK</div>
         <span className="header-title">Ravro Kanban</span>
         <div className="header-actions">
           <span className="header-count">{totalCards} card{totalCards !== 1 ? 's' : ''}</span>
+          <button
+            className={`btn-header${saved ? ' btn-saved-flash' : ''}`}
+            onClick={manualSave}
+            title="Save board"
+          >{saved ? '✓ Saved' : '↓ Save'}</button>
           <button
             className="btn-header"
             onClick={suggestMoves}

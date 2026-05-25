@@ -12,4 +12,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   ai: {
     complete: (payload) => ipcRenderer.invoke('ai:complete', payload),
   },
+  files: {
+    openDialog: () => ipcRenderer.invoke('dialog:open-file'),
+    open: (filePath) => ipcRenderer.invoke('shell:open-path', filePath),
+  },
 });

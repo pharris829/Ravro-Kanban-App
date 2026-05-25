@@ -54,7 +54,7 @@ Keep each title concise (under 10 words). Generate 3 to 5 suggestions that do no
             onMoveLeft={() => onMoveCard(card.id, col.id, 'left')}
             onMoveRight={() => onMoveCard(card.id, col.id, 'right')}
             onDelete={() => onDeleteCard(col.id, card.id)}
-            onUpdate={(text) => onUpdateCard(col.id, card.id, text)}
+            onUpdate={(updates) => onUpdateCard(col.id, card.id, updates)}
           />
         ))}
       </div>

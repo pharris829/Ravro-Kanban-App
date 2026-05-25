@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { callAI } = require('./ai');
@@ -67,6 +67,13 @@ ipcMain.handle('board:save', (_e, data) => { writeJSON(getBoardPath(), data); re
 // ── Settings IPC ─────────────────────────────────────────────────
 ipcMain.handle('settings:get', () => readJSON(getSettingsPath()) || {});
 ipcMain.handle('settings:set', (_e, data) => { writeJSON(getSettingsPath(), data); return { ok: true }; });
+
+// ── File IPC ─────────────────────────────────────────────────────
+ipcMain.handle('dialog:open-file', async () => {
+  const { canceled, filePaths } = await dialog.showOpenDialog({ properties: ['openFile', 'multiSelections'] });
+  return canceled ? [] : filePaths;
+});
+ipcMain.handle('shell:open-path', (_e, filePath) => shell.openPath(filePath));
 
 // ── AI IPC ───────────────────────────────────────────────────────
 ipcMain.handle('ai:complete', async (_e, { messages, systemPrompt }) => {
